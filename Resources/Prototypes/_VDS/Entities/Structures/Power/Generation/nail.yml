@@ -1,0 +1,9 @@
+- type: entity
+  id: nailCore
+  parent: StatueColumnReaper
+  description: All matter is composed of atoms. The forces within the atom work toward a stable balance by shedding excess atomic energy. Unstable nuclei may emit a quantity of energy; this is what is called radiation.
+  components:
+    - type: RadiationSource
+    - type: PointLight
+      energy: 5
+      color: '#47B38DFF'
