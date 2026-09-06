@@ -38,6 +38,13 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
     private void StatusEffectApplied(Entity<LumbagoStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
     {
         ent.Comp.Affected = args.Target;
+        //TODO: Replace with random predicted when we get that.
+        var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, args.Target.GetHashCode());
+        var rand = new System.Random(seed);
+        ent.Comp.LumbagFlareUpDelay=_timing.CurTime +
+                                    TimeSpan.FromSeconds(rand.NextInt64(ent.Comp.LumbagoFlareUpDelayMinMax.Min, ent.Comp.LumbagoFlareUpDelayMinMax.Max));
+        ent.Comp.LumbagoReminderDelay=_timing.CurTime +
+                                      TimeSpan.FromSeconds(ent.Comp.LumbagoReminderDelayMinMax.Min,ent.Comp.LumbagoReminderDelayMinMax.Max);
     }
 
     /// <summary>
@@ -78,8 +85,10 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             {
                 var duration = TimeSpan.FromSeconds(rand.NextFloat(lumbagoComp.FlareUpDurationMinMax.Min, lumbagoComp.FlareUpDurationMinMax.Max));
                 _movementMod.TryAddMovementSpeedModDuration(statusOwner, _FlareUpStatusEffect, duration,lumbagoComp.FlareUpMovementSpeedMod);
+                lumbagoComp.LumbagFlareUpDelay=_timing.CurTime +
+                                               duration +
+                                               TimeSpan.FromSeconds(rand.NextInt64(lumbagoComp.LumbagoFlareUpDelayMinMax.Min, lumbagoComp.LumbagoFlareUpDelayMinMax.Max));
                 DirtyEntity(statusOwner);
-                lumbagoComp.LumbagFlareUpDelay=_timing.CurTime + duration + TimeSpan.FromSeconds(rand.NextInt64(lumbagoComp.LumbagoFlareUpDelayMinMax.Min, lumbagoComp.LumbagoFlareUpDelayMinMax.Max));
             }
 
             //Send a reminder to the player if we roll below or at reminder chance and there is a flair up occuring.
@@ -93,6 +102,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
 
                 lumbagoComp.LumbagoReminderDelay=_timing.CurTime +
                                                  TimeSpan.FromSeconds(lumbagoComp.LumbagoReminderDelayMinMax.Min,lumbagoComp.LumbagoReminderDelayMinMax.Max);
+                DirtyEntity(statusOwner);
 
             }
             //Send a reminder to the player if we roll below or at reminder chance
@@ -106,6 +116,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
 
                 lumbagoComp.LumbagoReminderDelay=_timing.CurTime +
                                                  TimeSpan.FromSeconds(lumbagoComp.LumbagoReminderDelayMinMax.Min,lumbagoComp.LumbagoReminderDelayMinMax.Max);
+                DirtyEntity(statusOwner);
             }
 
         }
