@@ -70,7 +70,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, statusOwner.GetHashCode());
             var rand = new System.Random(seed);
 
-            var roll=rand.NextFloat(0f, 1f);
+            var roll = rand.NextFloat(0f, 1f);
 
             //if we roll below or at the chance for a flair up, give the status owner LumbagoFlareUpSlowdownStatusEffect
             if (roll<=lumbagoComp.FlareUpChance && !_statusEffects.HasStatusEffect(statusOwner, "LumbagoFlareUpSlowdownStatusEffect"))
