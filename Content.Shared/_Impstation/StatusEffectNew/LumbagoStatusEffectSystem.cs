@@ -74,15 +74,16 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             var rand = new System.Random(seed);
 
             //if we roll below or at the chance for a flair up, give the status owner LumbagoFlareUpSlowdownStatusEffect
-            if (rand.Prob(lumbagoComp.FlareUpChance) && !_statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
+            if (_timing.CurTime >= lumbagoComp.LumbagFlareUpDelay)
             {
                 var duration = TimeSpan.FromSeconds(rand.NextFloat(lumbagoComp.FlareUpDurationMinMax.Min, lumbagoComp.FlareUpDurationMinMax.Max));
                 _movementMod.TryAddMovementSpeedModDuration(statusOwner, _FlareUpStatusEffect, duration,lumbagoComp.FlareUpMovementSpeedMod);
                 DirtyEntity(statusOwner);
+                lumbagoComp.LumbagFlareUpDelay=_timing.CurTime + duration + TimeSpan.FromSeconds(rand.NextInt64(lumbagoComp.LumbagoFlareUpDelayMinMax.Min, lumbagoComp.LumbagoFlareUpDelayMinMax.Max));
             }
 
             //Send a reminder to the player if we roll below or at reminder chance and there is a flair up occuring.
-            if (rand.Prob(lumbagoComp.LumbagoReminderChance) && _statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
+            if (_timing.CurTime >= lumbagoComp.LumbagoReminderDelay && _statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
             {
                 var selected = rand.Next(lumbagoComp.BadPainReminders.Count);
                 if(!lumbagoComp.BadPainReminders.TryGetValue(selected, out var reminder))
@@ -90,15 +91,21 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
 
                 _popup.PopupClient(Loc.GetString(reminder), statusOwner, statusOwner, PopupType.SmallCaution);
 
+                lumbagoComp.LumbagoReminderDelay=_timing.CurTime +
+                                                 TimeSpan.FromSeconds(lumbagoComp.LumbagoReminderDelayMinMax.Min,lumbagoComp.LumbagoReminderDelayMinMax.Max);
+
             }
             //Send a reminder to the player if we roll below or at reminder chance
-            else if (rand.Prob(lumbagoComp.LumbagoReminderChance))
+            else if (_timing.CurTime >= lumbagoComp.LumbagoReminderDelay)
             {
                 var selected = rand.Next(lumbagoComp.MildPainReminders.Count);
                 if(!lumbagoComp.MildPainReminders.TryGetValue(selected, out var reminder))
                     return;
 
                 _popup.PopupClient(Loc.GetString(reminder), statusOwner, statusOwner);
+
+                lumbagoComp.LumbagoReminderDelay=_timing.CurTime +
+                                                 TimeSpan.FromSeconds(lumbagoComp.LumbagoReminderDelayMinMax.Min,lumbagoComp.LumbagoReminderDelayMinMax.Max);
             }
 
         }
