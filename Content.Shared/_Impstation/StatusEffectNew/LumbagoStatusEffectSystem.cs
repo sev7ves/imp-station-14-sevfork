@@ -55,7 +55,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        if(_timing.CurTime<_lumbagoUpdateTimer)
+        if(_timing.CurTime < _lumbagoUpdateTimer)
             return;
 
         var query= EntityQueryEnumerator<Components.LumbagoStatusEffectComponent,StatusEffectComponent>();
