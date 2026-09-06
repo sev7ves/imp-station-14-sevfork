@@ -93,7 +93,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             //Send a reminder to the player if we roll below or at reminder chance
             else if (roll <= lumbagoComp.LumbagoReminderChance)
             {
-                var selected=rand.Next(lumbagoComp.MildPainReminders.Count);
+                var selected = rand.Next(lumbagoComp.MildPainReminders.Count);
                 if(!lumbagoComp.MildPainReminders.TryGetValue(selected, out var reminder))
                     return;
 
