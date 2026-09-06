@@ -59,7 +59,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             return;
 
         var query= EntityQueryEnumerator<Components.LumbagoStatusEffectComponent,StatusEffectComponent>();
-        _lumbagoUpdateTimer=_timing.CurTime+_lumbagoUpdateInterval;
+        _lumbagoUpdateTimer = _timing.CurTime+_lumbagoUpdateInterval;
 
         while (query.MoveNext(out _, out var lumbagoComp, out var statusComp))
         {
