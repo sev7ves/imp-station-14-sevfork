@@ -1,9 +1,11 @@
+using Content.Shared._Impstation.StatusEffectNew.Components;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Random.Helpers;
 using Content.Shared.StatusEffectNew;
 using Content.Shared.StatusEffectNew.Components;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -22,17 +24,18 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
 
     private readonly TimeSpan _lumbagoUpdateInterval= TimeSpan.FromSeconds(1);
     private TimeSpan _lumbagoUpdateTimer = TimeSpan.Zero;
+    private readonly EntProtoId _FlareUpStatusEffect = "LumbagoFlareUpSlowdownStatusEffect";
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<Components.LumbagoStatusEffectComponent, StatusEffectAppliedEvent>(StatusEffectApplied);
-        SubscribeLocalEvent<Components.LumbagoStatusEffectComponent, StatusEffectRelayedEvent<RefreshMovementSpeedModifiersEvent>>(TryModifyMovementSpeed);
+        SubscribeLocalEvent<LumbagoStatusEffectComponent, StatusEffectAppliedEvent>(StatusEffectApplied);
+        SubscribeLocalEvent<LumbagoStatusEffectComponent, StatusEffectRelayedEvent<RefreshMovementSpeedModifiersEvent>>(TryModifyMovementSpeed);
     }
 
 
-    private void StatusEffectApplied(Entity<Components.LumbagoStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
+    private void StatusEffectApplied(Entity<LumbagoStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
     {
         ent.Comp.Affected = args.Target;
     }
@@ -40,7 +43,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
     /// <summary>
     /// Selectively modifies pulling movespeed.
     /// </summary>
-    private void TryModifyMovementSpeed(Entity<Components.LumbagoStatusEffectComponent> ent, ref StatusEffectRelayedEvent<RefreshMovementSpeedModifiersEvent> args)
+    private void TryModifyMovementSpeed(Entity<LumbagoStatusEffectComponent> ent, ref StatusEffectRelayedEvent<RefreshMovementSpeedModifiersEvent> args)
     {
        if (!TryComp<PullerComponent>(ent.Comp.Affected, out var pullerComp)||pullerComp.Pulling==null)
             return;
@@ -58,7 +61,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
         if(_timing.CurTime < _lumbagoUpdateTimer)
             return;
 
-        var query= EntityQueryEnumerator<Components.LumbagoStatusEffectComponent,StatusEffectComponent>();
+        var query = EntityQueryEnumerator<LumbagoStatusEffectComponent,StatusEffectComponent>();
         _lumbagoUpdateTimer = _timing.CurTime+_lumbagoUpdateInterval;
 
         while (query.MoveNext(out _, out var lumbagoComp, out var statusComp))
@@ -73,21 +76,21 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             var roll = rand.NextFloat(0f, 1f);
 
             //if we roll below or at the chance for a flair up, give the status owner LumbagoFlareUpSlowdownStatusEffect
-            if (roll<=lumbagoComp.FlareUpChance && !_statusEffects.HasStatusEffect(statusOwner, "LumbagoFlareUpSlowdownStatusEffect"))
+            if (roll<=lumbagoComp.FlareUpChance && !_statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
             {
-                var duration = TimeSpan.FromSeconds(rand.NextFloat(lumbagoComp.FlareUpDurationMin, lumbagoComp.FlareUpDurationMax));
-                _movementMod.TryAddMovementSpeedModDuration(statusOwner, "LumbagoFlareUpSlowdownStatusEffect",duration,lumbagoComp.FlareUpMovementSpeedMod);
+                var duration = TimeSpan.FromSeconds(rand.NextFloat(lumbagoComp.FlareUpDurationMinMax.Min, lumbagoComp.FlareUpDurationMinMax.Max));
+                _movementMod.TryAddMovementSpeedModDuration(statusOwner, _FlareUpStatusEffect, duration,lumbagoComp.FlareUpMovementSpeedMod);
                 DirtyEntity(statusOwner);
             }
 
             //Send a reminder to the player if we roll below or at reminder chance and there is a flair up occuring.
-            if (roll<=lumbagoComp.LumbagoReminderChance && _statusEffects.HasStatusEffect(statusOwner, "LumbagoFlareUpSlowdownStatusEffect"))
+            if (roll <= lumbagoComp.LumbagoReminderChance && _statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
             {
-                var selected=rand.Next(lumbagoComp.BadPainReminders.Count);
+                var selected = rand.Next(lumbagoComp.BadPainReminders.Count);
                 if(!lumbagoComp.BadPainReminders.TryGetValue(selected, out var reminder))
                     return;
 
-                _popup.PopupClient(Loc.GetString(reminder),statusOwner,statusOwner,PopupType.SmallCaution);
+                _popup.PopupClient(Loc.GetString(reminder), statusOwner, statusOwner, PopupType.SmallCaution);
 
             }
             //Send a reminder to the player if we roll below or at reminder chance
@@ -97,7 +100,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
                 if(!lumbagoComp.MildPainReminders.TryGetValue(selected, out var reminder))
                     return;
 
-                _popup.PopupClient(Loc.GetString(reminder),statusOwner,statusOwner);
+                _popup.PopupClient(Loc.GetString(reminder), statusOwner, statusOwner);
             }
 
         }

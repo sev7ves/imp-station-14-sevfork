@@ -1,3 +1,4 @@
+using Content.Shared.Destructible.Thresholds;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._Impstation.StatusEffectNew.Components;
@@ -37,13 +38,7 @@ public sealed partial class LumbagoStatusEffectComponent : Component
     /// The minimum duration of a flare up.
     /// </summary>
     [DataField]
-    public float FlareUpDurationMin = 10;
-
-    /// <summary>
-    /// The maximum duration of a flare up.
-    /// </summary>
-    [DataField]
-    public float FlareUpDurationMax = 60;
+    public MinMax FlareUpDurationMinMax = new (10,60);
 
     /// <summary>
     /// The blanket move speed modifier of a flare up.
@@ -55,13 +50,13 @@ public sealed partial class LumbagoStatusEffectComponent : Component
     /// The set of reminders.
     /// </summary>
     [DataField]
-    public List<string> MildPainReminders = new();
+    public List<LocId> MildPainReminders = new();
 
     /// <summary>
     /// The set of reminders during a flair up.
     /// </summary>
     [DataField]
-    public List<string> BadPainReminders = new();
+    public List<LocId> BadPainReminders = new();
 
     /// <summary>
     /// The target entity of the status effect.
