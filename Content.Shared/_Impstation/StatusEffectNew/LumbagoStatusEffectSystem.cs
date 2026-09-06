@@ -73,10 +73,8 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, statusOwner.GetHashCode());
             var rand = new System.Random(seed);
 
-            var roll = rand.NextFloat(0f, 1f);
-
             //if we roll below or at the chance for a flair up, give the status owner LumbagoFlareUpSlowdownStatusEffect
-            if (roll<=lumbagoComp.FlareUpChance && !_statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
+            if (rand.Prob(lumbagoComp.FlareUpChance) && !_statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
             {
                 var duration = TimeSpan.FromSeconds(rand.NextFloat(lumbagoComp.FlareUpDurationMinMax.Min, lumbagoComp.FlareUpDurationMinMax.Max));
                 _movementMod.TryAddMovementSpeedModDuration(statusOwner, _FlareUpStatusEffect, duration,lumbagoComp.FlareUpMovementSpeedMod);
@@ -84,7 +82,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
             }
 
             //Send a reminder to the player if we roll below or at reminder chance and there is a flair up occuring.
-            if (roll <= lumbagoComp.LumbagoReminderChance && _statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
+            if (rand.Prob(lumbagoComp.LumbagoReminderChance) && _statusEffects.HasStatusEffect(statusOwner, _FlareUpStatusEffect))
             {
                 var selected = rand.Next(lumbagoComp.BadPainReminders.Count);
                 if(!lumbagoComp.BadPainReminders.TryGetValue(selected, out var reminder))
@@ -94,7 +92,7 @@ public sealed class LumbagoStatusEffectSystem : EntitySystem
 
             }
             //Send a reminder to the player if we roll below or at reminder chance
-            else if (roll <= lumbagoComp.LumbagoReminderChance)
+            else if (rand.Prob(lumbagoComp.LumbagoReminderChance))
             {
                 var selected = rand.Next(lumbagoComp.MildPainReminders.Count);
                 if(!lumbagoComp.MildPainReminders.TryGetValue(selected, out var reminder))
